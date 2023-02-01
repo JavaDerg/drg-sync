@@ -9,22 +9,33 @@ pub struct Client {
     socket: WebSocket,
 
     handle: RoomHandle,
-    updates: Option<broadcast::Receiver<RoomUpdate>>,
+    update_stream: broadcast::Receiver<RoomUpdate>,
 
     id: Uuid,
 }
 
 impl Client {
-    pub async fn new(handle: RoomHandle, socket: WebSocket, id: Uuid) {
+    pub async fn spawn_new(handle: RoomHandle, socket: WebSocket, id: Uuid) {
+        let update_stream = handle.subscribe(id).await;
         let mut client = Self {
             socket,
             handle,
-            updates: None,
+            update_stream,
             id,
         };
-        let _ = tokio::spawn(async move { client.run().await });
+        drop(tokio::spawn(async move { client.run().await }));
     }
 
     async fn run(&mut self) {
+        let Err(err) = self.run_inner().await else { return };
+        eprintln!("error produced in client: {err}");
+    }
+
+    async fn run_inner(&mut self) -> eyre::Result<()> {
+        loop {
+            todo!()
+        }
+
+        Ok(())
     }
 }
