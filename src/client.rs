@@ -2,11 +2,17 @@ use crate::room::{RoomHandle, RoomUpdate};
 use axum::extract::ws::WebSocket;
 use tokio::sync::broadcast;
 use uuid::Uuid;
+use crate::client::json::JsonClient;
 
 mod json;
 
+#[derive(serde::Deserialize)]
+pub enum ClientMessage {
+
+}
+
 pub struct Client {
-    socket: WebSocket,
+    socket: JsonClient<ClientMessage, RoomUpdate>,
 
     handle: RoomHandle,
     update_stream: broadcast::Receiver<RoomUpdate>,
@@ -18,7 +24,7 @@ impl Client {
     pub async fn spawn_new(handle: RoomHandle, socket: WebSocket, id: Uuid) {
         let update_stream = handle.subscribe(id).await;
         let mut client = Self {
-            socket,
+            socket: JsonClient::new(socket),
             handle,
             update_stream,
             id,

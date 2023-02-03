@@ -1,8 +1,7 @@
 use axum::extract::ws::{Message, WebSocket};
-use axum::Error;
 use eyre::eyre;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::marker::PhantomData;
 
 pub struct JsonClient<R, S> {
@@ -12,6 +11,14 @@ pub struct JsonClient<R, S> {
 }
 
 impl<R: DeserializeOwned, S: Serialize> JsonClient<R, S> {
+    pub fn new(socket: WebSocket) -> Self {
+        Self {
+            socket: Some(socket),
+            _recv: Default::default(),
+            _send: Default::default(),
+        }
+    }
+
     pub async fn recv(&mut self) -> eyre::Result<Option<R>> {
         let Some(socket) = self.socket.as_mut() else { return Ok(None) };
 
